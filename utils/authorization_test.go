@@ -84,11 +84,12 @@ func TestSetRolePermissionsFromConfig(t *testing.T) {
 				permission := roleMappingItem.Permission
 				hasPermission := roleHasPermission(role, permission)
 
-				if roleMappingItem.ShouldHave && !hasPermission {
-					t.Errorf("Expected '%v' to have '%v' permission when '%v' is set to '%v'.", role.Name, permission, policyName, policyValue)
-				}
-				if !roleMappingItem.ShouldHave && hasPermission {
-					t.Errorf("Expected '%v' not to have '%v' permission when '%v' is set to '%v'.", role.Name, permission, policyName, policyValue)
+				if (roleMappingItem.ShouldHave && !hasPermission) || (!roleMappingItem.ShouldHave && hasPermission) {
+					wording := "not to"
+					if roleMappingItem.ShouldHave {
+						wording = "to"
+					}
+					t.Errorf("Expected '%v' %v have '%v' permission when '%v' is set to '%v'.", role.Name, wording, permission, policyName, policyValue)
 				}
 
 			}
