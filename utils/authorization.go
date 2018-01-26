@@ -35,6 +35,10 @@ func SetRolePermissionsFromConfig(roles map[string]*model.Role, cfg *model.Confi
 				roles[model.TEAM_USER_ROLE_ID].Permissions,
 				model.PERMISSION_MANAGE_PUBLIC_CHANNEL_PROPERTIES.Id,
 			)
+			roles[model.CHANNEL_USER_ROLE_ID].Permissions = append(
+				roles[model.CHANNEL_USER_ROLE_ID].Permissions,
+				model.PERMISSION_MANAGE_PUBLIC_CHANNEL_PROPERTIES.Id,
+			)
 		case model.PERMISSIONS_CHANNEL_ADMIN:
 			roles[model.TEAM_ADMIN_ROLE_ID].Permissions = append(
 				roles[model.TEAM_ADMIN_ROLE_ID].Permissions,
@@ -62,6 +66,10 @@ func SetRolePermissionsFromConfig(roles map[string]*model.Role, cfg *model.Confi
 		case model.PERMISSIONS_ALL:
 			roles[model.TEAM_USER_ROLE_ID].Permissions = append(
 				roles[model.TEAM_USER_ROLE_ID].Permissions,
+				model.PERMISSION_DELETE_PUBLIC_CHANNEL.Id,
+			)
+			roles[model.CHANNEL_USER_ROLE_ID].Permissions = append(
+				roles[model.CHANNEL_USER_ROLE_ID].Permissions,
 				model.PERMISSION_DELETE_PUBLIC_CHANNEL.Id,
 			)
 		case model.PERMISSIONS_CHANNEL_ADMIN:
@@ -113,6 +121,10 @@ func SetRolePermissionsFromConfig(roles map[string]*model.Role, cfg *model.Confi
 				roles[model.TEAM_USER_ROLE_ID].Permissions,
 				model.PERMISSION_MANAGE_PRIVATE_CHANNEL_PROPERTIES.Id,
 			)
+			roles[model.CHANNEL_USER_ROLE_ID].Permissions = append(
+				roles[model.CHANNEL_USER_ROLE_ID].Permissions,
+				model.PERMISSION_MANAGE_PRIVATE_CHANNEL_PROPERTIES.Id,
+			)
 		case model.PERMISSIONS_CHANNEL_ADMIN:
 			roles[model.TEAM_ADMIN_ROLE_ID].Permissions = append(
 				roles[model.TEAM_ADMIN_ROLE_ID].Permissions,
@@ -140,6 +152,10 @@ func SetRolePermissionsFromConfig(roles map[string]*model.Role, cfg *model.Confi
 		case model.PERMISSIONS_ALL:
 			roles[model.TEAM_USER_ROLE_ID].Permissions = append(
 				roles[model.TEAM_USER_ROLE_ID].Permissions,
+				model.PERMISSION_DELETE_PRIVATE_CHANNEL.Id,
+			)
+			roles[model.CHANNEL_USER_ROLE_ID].Permissions = append(
+				roles[model.CHANNEL_USER_ROLE_ID].Permissions,
 				model.PERMISSION_DELETE_PRIVATE_CHANNEL.Id,
 			)
 		case model.PERMISSIONS_CHANNEL_ADMIN:
@@ -260,6 +276,32 @@ func SetRolePermissionsFromConfig(roles map[string]*model.Role, cfg *model.Confi
 		)
 	}
 
+	// Grant permissions for editing posts.
+	if isLicensed {
+		switch *cfg.ServiceSettings.AllowEditPost {
+		case model.ALLOW_EDIT_POST_ALWAYS, model.ALLOW_EDIT_POST_TIME_LIMIT:
+			roles[model.CHANNEL_USER_ROLE_ID].Permissions = append(
+				roles[model.CHANNEL_USER_ROLE_ID].Permissions,
+				model.PERMISSION_EDIT_POST.Id,
+			)
+		case model.ALLOW_EDIT_POST_NEVER:
+			index := indexInSlice(model.PERMISSION_EDIT_POST.Id, roles[model.SYSTEM_ADMIN_ROLE_ID].Permissions)
+			if index != -1 {
+				roles[model.SYSTEM_ADMIN_ROLE_ID].Permissions = append(
+					roles[model.SYSTEM_ADMIN_ROLE_ID].Permissions[:index],
+					roles[model.SYSTEM_ADMIN_ROLE_ID].Permissions[index+1:]...,
+				)
+			}
+			index = indexInSlice(model.PERMISSION_EDIT_POST.Id, roles[model.CHANNEL_USER_ROLE_ID].Permissions)
+			if index != -1 {
+				roles[model.CHANNEL_USER_ROLE_ID].Permissions = append(
+					roles[model.CHANNEL_USER_ROLE_ID].Permissions[:index],
+					roles[model.CHANNEL_USER_ROLE_ID].Permissions[index+1:]...,
+				)
+			}
+		}
+	}
+
 	if cfg.TeamSettings.EnableTeamCreation {
 		roles[model.SYSTEM_USER_ROLE_ID].Permissions = append(
 			roles[model.SYSTEM_USER_ROLE_ID].Permissions,
@@ -268,4 +310,13 @@ func SetRolePermissionsFromConfig(roles map[string]*model.Role, cfg *model.Confi
 	}
 
 	return roles
+}
+
+func indexInSlice(item string, items []string) int {
+	for i, v := range items {
+		if v == item {
+			return i
+		}
+	}
+	return -1
 }
