@@ -460,7 +460,7 @@ func (a *App) DoAdvancedPermissionsMigration() {
 
 	l4g.Info("Migrating roles to database.")
 	roles := model.MakeDefaultRoles()
-	roles = utils.SetRolePermissionsFromConfig(roles, a.Config(), IsLicensed())
+	roles = utils.SetRolePermissionsFromConfig(roles, a.Config(), utils.IsLicensed())
 
 	for _, role := range roles {
 		if result := <-a.Srv.Store.Role().Save(role); result.Err != nil {
