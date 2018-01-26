@@ -76,10 +76,10 @@ func TestSetRolePermissionsFromConfig(t *testing.T) {
 			config := mockConfig()
 			updateConfig(config, policyName, policyValue)
 			roles := model.MakeDefaultRoles()
-			updatedRoles := SetRolePermissionsFromConfig(roles, config, true)
+			SetRolePermissionsFromConfig(roles, config, true)
 
 			for _, roleMappingItem := range rolesMappings {
-				role := updatedRoles[roleMappingItem.RoleName]
+				role := roles[roleMappingItem.RoleName]
 
 				permission := roleMappingItem.Permission
 				hasPermission := roleHasPermission(role, permission)
